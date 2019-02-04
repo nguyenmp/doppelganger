@@ -98,6 +98,21 @@ def align_face(file_name):
         cv2.waitKey(0)
 
 
+def calculate_encoding_for_face(file_name):
+    import dlib
+    # Models Loaded
+    face_image = cv2.imread(file_name)
+    face_detector = dlib.get_frontal_face_detector()
+    pose_predictor = dlib.shape_predictor('/Users/livingon/Downloads/shape_predictor_68_face_landmarks.dat')
+    face_encoder = dlib.face_recognition_model_v1('/Users/livingon/Downloads/dlib_face_recognition_resnet_model_v1.dat')
+    face_locations = face_detector(face_image, 1)
+    assert len(face_locations) == 1
+    face_location = face_locations[0]
+    pose = pose_predictor(face_image, face_location)
+    encoding = face_encoder.compute_face_descriptor(face_image, pose, 1)
+    print(encoding)
+
+
 def main():
     '''
     Finds all employees and their profile pictures
@@ -110,6 +125,7 @@ def main():
         file_name = save_bytes_to_file(image_bytes)
         detect_faces(file_name)
         align_face(file_name)
+        calculate_encoding_for_face(file_name)
 
 
 if __name__ == '__main__':
