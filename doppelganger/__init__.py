@@ -55,13 +55,15 @@ def get_employees(ldap_instance):
         filterstr=get_filter_string(),
         attrlist=['applePhotoOfficial-jpeg', 'cn', 'appledsId'],
     )
-    while True:
+    count = 0
+    while count < 200:
         # The first value is the result-type which is unused
         (_, result_datas) = ldap_instance.result(
             msgid=result_id,
             all=0,
         )
         yield process_result(result_datas)
+        count += 1
 
 
 def process_result(result_datas):

@@ -7,6 +7,7 @@ import json
 import os
 
 import cv2
+import numpy
 
 from . import (
     init_ldap,
@@ -97,20 +98,21 @@ def align_face(file_name):
         cv2.imshow("Aligned", faceAligned)
         cv2.waitKey(0)
 
+import dlib
+face_detector = dlib.get_frontal_face_detector()
+pose_predictor = dlib.shape_predictor('/Users/livingon/Downloads/shape_predictor_68_face_landmarks.dat')
+face_encoder = dlib.face_recognition_model_v1('/Users/livingon/Downloads/dlib_face_recognition_resnet_model_v1.dat')
 
 def calculate_encoding_for_face(file_name):
-    import dlib
     # Models Loaded
     face_image = cv2.imread(file_name)
-    face_detector = dlib.get_frontal_face_detector()
-    pose_predictor = dlib.shape_predictor('/Users/livingon/Downloads/shape_predictor_68_face_landmarks.dat')
-    face_encoder = dlib.face_recognition_model_v1('/Users/livingon/Downloads/dlib_face_recognition_resnet_model_v1.dat')
     face_locations = face_detector(face_image, 1)
-    assert len(face_locations) == 1
+    if len(face_locations) != 1:
+        logger.warn('Found %s faces', len(face_locations))
+        return None
     face_location = face_locations[0]
     pose = pose_predictor(face_image, face_location)
-    encoding = face_encoder.compute_face_descriptor(face_image, pose, 1)
-    print(encoding)
+    return numpy.array(face_encoder.compute_face_descriptor(face_image, pose, 1))
 
 
 def main():
@@ -118,14 +120,23 @@ def main():
     Finds all employees and their profile pictures
     '''
     ldap_instance = init_ldap()
+    employees = []
     for employee in get_employees(ldap_instance):
-        json.dumps(employee)
-        logger.info('Looking at %s', json.dumps(employee))
+        logger.info('Looking at %s', employee['cn'])
+        image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
+        file_name = save_bytes_to_file(image_bytes)
+        # detect_faces(file_name)
+        # align_face(file_name)
+        encoding = calculate_encoding_for_face(file_name)
+        if encoding is not None:
+            employee['encoding'] = encoding
+            employees.append(employee)
+
+    employees = sorted(employees, key=lambda x: numpy.linalg.norm(x['encoding'] - employees[39]['encoding']))
+    for employee in employees:
         image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
         file_name = save_bytes_to_file(image_bytes)
         detect_faces(file_name)
-        align_face(file_name)
-        calculate_encoding_for_face(file_name)
 
 
 if __name__ == '__main__':
