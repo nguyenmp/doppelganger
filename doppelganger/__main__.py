@@ -57,6 +57,7 @@ def detect_faces(file_name):
     )
     color = (0, 255, 0)
     stroke_width = 2
+    assert len(faces) == 1
     for (x_pos, y_pos, width, height) in faces:
         cv2.rectangle(
             image,
@@ -65,9 +66,36 @@ def detect_faces(file_name):
             color,
             stroke_width,
         )
-
     cv2.imshow("Faces found", image)
     cv2.waitKey(0)
+
+
+def align_face(file_name):
+    import dlib
+    from imutils.face_utils import (
+        FaceAligner,
+        rect_to_bb,
+    )
+    import imutils
+    face_detector = dlib.get_frontal_face_detector()
+    predictor_bits = '/Users/livingon/Downloads/face-alignment/shape_predictor_68_face_landmarks.dat'
+    face_pose_predictor = dlib.shape_predictor(predictor_bits)
+    face_aligner = FaceAligner(face_pose_predictor, desiredFaceWidth=256)
+
+    image = cv2.imread(file_name)
+    image = imutils.resize(image, width=800)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    rects = face_detector(gray, 2)
+
+    for rect in rects:
+        (x, y, w, h) = rect_to_bb(rect)
+        faceOrig = imutils.resize(image[y:y + h, x:x + w], width=256)
+        faceAligned = face_aligner.align(image, gray, rect)
+
+        cv2.imshow("Original", faceOrig)
+        cv2.imshow("Aligned", faceAligned)
+        cv2.waitKey(0)
 
 
 def main():
@@ -81,6 +109,7 @@ def main():
         image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
         file_name = save_bytes_to_file(image_bytes)
         detect_faces(file_name)
+        align_face(file_name)
 
 
 if __name__ == '__main__':
