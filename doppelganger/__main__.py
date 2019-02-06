@@ -13,6 +13,8 @@ from . import (
     get_employees,
     logger,
     save_bytes_to_file,
+    db,
+    nparray_to_bin,
 )
 
 
@@ -107,10 +109,14 @@ def main():
     '''
     Finds all employees and their profile pictures
     '''
+    database = db.Database('./doppelganger.db')
     ldap_instance = init_ldap()
     employees = []
     for employee in get_employees(ldap_instance):
         logger.info('Looking at %s', employee['cn'])
+        # if employee['cn'] == 'Satoshi Arachi':
+        #     import pdb
+        #     pdb.set_trace()
         image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
         file_name = save_bytes_to_file(image_bytes)
         # detect_faces(file_name)
@@ -119,12 +125,14 @@ def main():
         if encoding is not None:
             employee['encoding'] = encoding
             employees.append(employee)
+            entry = db.create_entry_from_record(employee, nparray_to_bin(encoding))
+            database.put(entry)
 
-    employees = sorted(employees, key=lambda x: numpy.linalg.norm(x['encoding'] - employees[39]['encoding']))
-    for employee in employees:
-        image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
-        file_name = save_bytes_to_file(image_bytes)
-        detect_faces(file_name)
+    # employees = sorted(employees, key=lambda x: numpy.linalg.norm(x['encoding'] - employees[39]['encoding']))
+    # for employee in employees:
+    #     image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
+    #     file_name = save_bytes_to_file(image_bytes)
+    #     detect_faces(file_name)
 
 
 if __name__ == '__main__':

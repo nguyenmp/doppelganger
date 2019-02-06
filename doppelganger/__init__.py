@@ -6,11 +6,37 @@ Scrapes Apple Directory and determines doppelgängers
 '''
 
 import base64
+import tempfile
 
 import ldap
 from ldap import asyncsearch
-
+import numpy
 from testlogger import logger
+
+
+def nparray_to_bin(nparray):
+    '''
+    Converts a numpy array into some binary data that can be stored
+
+    This only exists because numpy only provides binary conversion using files
+    '''
+    path = tempfile.NamedTemporaryFile(delete=False).name
+    numpy.save(path, nparray)
+    with open(path + '.npy', 'rb') as handle:
+        return handle.read()
+
+
+def bin_to_nparray(binary):
+    '''
+    Given some binary data that was once a numpy array, read it back
+
+    This only exists because numpy only provides binary conversion using files
+    '''
+    path = tempfile.NamedTemporaryFile(delete=False).name
+    with open(path, 'wb') as handle:
+        handle.write(binary)
+
+    return numpy.load(path)
 
 
 def save_bytes_to_file(byte_array):
@@ -18,7 +44,6 @@ def save_bytes_to_file(byte_array):
     Given an array of bytes, returns the filename of a
     a temporary file that contains those contents
     '''
-    import tempfile
     handle = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
     handle.write(byte_array)
     handle.flush()
@@ -67,15 +92,13 @@ def get_employees(ldap_instance):
         filterstr=get_filter_string(),
         attrlist=['applePhotoOfficial-jpeg', 'cn', 'appledsId'],
     )
-    count = 0
-    while count < 200:
+    while True:
         # The first value is the result-type which is unused
         (_, result_datas) = ldap_instance.result(
             msgid=result_id,
             all=0,
         )
         yield process_result(result_datas)
-        count += 1
 
 
 def process_result(result_datas):
@@ -101,6 +124,8 @@ def process_result(result_datas):
         assert len(value) == 1
         assert isinstance(value, list)
         attributes[key] = value[0]
+
+    attributes['cn'] = attributes['cn'].decode('utf8')
 
     image_data = attributes['applePhotoOfficial-jpeg']
     attributes['applePhotoOfficial-jpeg'] = base64.b64encode(image_data)

@@ -17,6 +17,18 @@ EXAMPLE_RESULT = [(
 )]
 
 
+def test_numpy_array_serialization():
+    '''
+    Tests serialization and deserialization of numpy arrays
+    '''
+    import numpy
+    array = numpy.array([0, 1, 2])
+    binary = doppelganger.nparray_to_bin(array)
+    assert binary
+    and_back_again = doppelganger.bin_to_nparray(binary)
+    assert numpy.array_equal(array, and_back_again)
+
+
 def test_save_bytes_to_file():
     '''
     Saves bytes to a file and checks they were properly saved
