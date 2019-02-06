@@ -3,7 +3,6 @@ This is the main module.  It is executed when run with `python -m doppleganger`
 '''
 
 import base64
-import json
 import os
 
 import cv2
@@ -13,19 +12,8 @@ from . import (
     init_ldap,
     get_employees,
     logger,
+    save_bytes_to_file,
 )
-
-
-def save_bytes_to_file(byte_array):
-    '''
-    Given an array of bytes, returns the filename of a
-    a temporary file that contains those contents
-    '''
-    import tempfile
-    handle = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
-    handle.write(byte_array)
-    handle.flush()
-    return handle.name
 
 
 def get_cascade_bits():

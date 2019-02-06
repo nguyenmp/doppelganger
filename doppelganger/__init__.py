@@ -13,6 +13,18 @@ from ldap import asyncsearch
 from testlogger import logger
 
 
+def save_bytes_to_file(byte_array):
+    '''
+    Given an array of bytes, returns the filename of a
+    a temporary file that contains those contents
+    '''
+    import tempfile
+    handle = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
+    handle.write(byte_array)
+    handle.flush()
+    return handle.name
+
+
 def init_ldap():
     '''
     Initializes a connection to the ldap server
