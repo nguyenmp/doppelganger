@@ -4,6 +4,11 @@ Tests for doppelganger
 
 import doppelganger
 
+from mock import (
+    patch,
+    MagicMock,
+)
+
 
 EXAMPLE_RESULT = [(
     'appledsId=23151044, ou=People, o=Apple',
@@ -15,6 +20,27 @@ EXAMPLE_RESULT = [(
         'cn': ['Elodia Anguiano Pantoja'],
     }
 )]
+
+
+@patch('doppelganger.init')
+def test_arguments_init(init_func):
+    '''
+    Checks that the argument parser resolves
+    the init command to the proper init function
+    '''
+    parser = doppelganger.argument_parser()
+    assert parser.parse_args(['init']).func == init_func
+
+
+@patch('doppelganger.db.Database')
+def test_get_db(database_class):
+    '''
+    Checks that the argument parser resolves
+    the init command to the proper init function
+    '''
+    database = doppelganger.get_database()
+    assert database is not None
+    database_class.assert_called_with(doppelganger.DB_PATH)
 
 
 def test_numpy_array_serialization():
@@ -62,3 +88,20 @@ def test_process_result():
 
     # Normally, this is a byte-array, we should base64 encode it for usability
     assert result['applePhotoOfficial-jpeg'] == '/9j/4AAQSkZJRgABAQEASABIAAA='
+
+
+@patch('doppelganger.dlib.face_recognition_model_v1')
+@patch('doppelganger.dlib.shape_predictor')
+@patch('doppelganger.dlib.get_frontal_face_detector')
+def test_get_pipeline(face_detector, pose_analyzer, face_encoder):
+    '''
+    Checks that we properly construct the pipeline
+    '''
+    face_detector.return_value = MagicMock()
+    pose_analyzer.return_value = MagicMock()
+    face_encoder.return_value = MagicMock()
+
+    pipeline = doppelganger.get_pipeline()
+    assert pipeline.face_detector == face_detector.return_value
+    assert pipeline.pose_analyzer == pose_analyzer.return_value
+    assert pipeline.face_encoder == face_encoder.return_value
