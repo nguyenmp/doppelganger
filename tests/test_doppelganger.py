@@ -49,9 +49,9 @@ def test_numpy_array_serialization():
     '''
     import numpy
     array = numpy.array([0, 1, 2])
-    binary = doppelganger.nparray_to_bin(array)
+    binary = doppelganger.db.nparray_to_bin(array)
     assert binary
-    and_back_again = doppelganger.bin_to_nparray(binary)
+    and_back_again = doppelganger.db.bin_to_nparray(binary)
     assert numpy.array_equal(array, and_back_again)
 
 
