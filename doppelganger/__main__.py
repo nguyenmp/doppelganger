@@ -14,7 +14,7 @@ def main():
     '''
     logger.info('Starting process')
     args = argument_parser().parse_args()
-    args.func()
+    args.func(args)
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ Scrapes Apple Directory and determines doppelgängers
 import argparse
 import base64
 import collections
+import heapq
 import os
 import tempfile
 
@@ -26,31 +27,6 @@ Pipeline = collections.namedtuple('Pipeline', [
     'pose_analyzer',
     'face_encoder',
 ])
-
-
-def nparray_to_bin(nparray):
-    '''
-    Converts a numpy array into some binary data that can be stored
-
-    This only exists because numpy only provides binary conversion using files
-    '''
-    path = tempfile.NamedTemporaryFile(delete=False).name
-    numpy.save(path, nparray)
-    with open(path + '.npy', 'rb') as handle:
-        return handle.read()
-
-
-def bin_to_nparray(binary):
-    '''
-    Given some binary data that was once a numpy array, read it back
-
-    This only exists because numpy only provides binary conversion using files
-    '''
-    path = tempfile.NamedTemporaryFile(delete=False).name
-    with open(path, 'wb') as handle:
-        handle.write(binary)
-
-    return numpy.load(path)
 
 
 def save_bytes_to_file(byte_array):
@@ -214,7 +190,7 @@ def get_database():
     return db.Database(DB_PATH)
 
 
-def init():
+def init(_):
     '''
     Sets up a database for you
     '''
@@ -232,9 +208,41 @@ def init():
             employee['encoding'] = encoding
             entry = db.create_entry_from_record(
                 employee,
-                nparray_to_bin(encoding),
+                encoding,
             )
             database.put(entry)
+
+
+def analyze(args):
+    '''
+    Given the dsid of a target, find the top matches to that target
+    '''
+    database = get_database()
+    employee = database.get_by_dsid(args.dsid)
+    logger.info('Finding matches for %s', employee.name)
+
+    result = []
+    for entry in database.entries():
+        if entry.dsid == employee.dsid:
+            continue
+
+        logger.info('Checking %s', entry.name)
+
+        distance = numpy.linalg.norm(
+            entry.facial_encoding - employee.facial_encoding
+        )
+
+        # Unconditionally add, then remove the later
+        # We use negative distance becauset his is a min heap
+        # and we want to pop the furthest items efficiently
+        heapq.heappush(result, (-distance, entry))
+
+        while len(result) > args.count:
+            (distance, evictant) = heapq.heappop(result)
+            logger.info('%s is too different', evictant.name)
+
+    for (distance, candidate) in result:
+        logger.info('DSID: %s matches %s%%', candidate.dsid, int(100 - (-distance * 100)))
 
 
 def argument_parser():
@@ -247,5 +255,13 @@ def argument_parser():
 
     init_parser = subparsers.add_parser('init')
     init_parser.set_defaults(func=init)
+
+    init_parser = subparsers.add_parser('analyze')
+    init_parser.add_argument('dsid', type=int, help='the person to match with')
+    init_parser.add_argument(
+        'count', type=int,
+        help='the number of matches to retain',
+    )
+    init_parser.set_defaults(func=analyze)
 
     return parser

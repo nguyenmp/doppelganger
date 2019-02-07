@@ -5,13 +5,16 @@ All the code pertaining to the file database backing
 import base64
 import collections
 import sqlite3
+import tempfile
+
+import numpy
 
 
 Entry = collections.namedtuple('Entry', [
-    'name',
-    'dsid',
-    'facial_encoding',
-    'picture',
+    'name',  # A utf8 encoded string
+    'dsid',  # A string?
+    'facial_encoding',  # A numpy array
+    'picture',  # The binary blob of jpeg bits
 ])
 
 INIT_SCRIPT = '''
@@ -43,7 +46,7 @@ def create_entry_from_row(row):
     return Entry(
         dsid=row['dsid'],
         name=row['name'],
-        facial_encoding=row['facial_encoding'],
+        facial_encoding=bin_to_nparray(row['facial_encoding']),
         picture=row['picture'],
     )
 
@@ -58,6 +61,10 @@ class Database(object):
         Establishes a connection to a database defined by path
         '''
         self.connection = sqlite3.connect(path)
+
+        # allow us to access row values by string
+        self.connection.row_factory = sqlite3.Row
+
         self.connection.executescript(INIT_SCRIPT)
 
     def entries(self):
@@ -79,8 +86,8 @@ class Database(object):
             WHERE dsid=?
         '''
         cursor = self.connection.cursor()
-        cursor.execute(statement, tuple(dsid))
-        row = cursor.fetch_one()
+        cursor.execute(statement, (dsid,))
+        row = cursor.fetchone()
         return create_entry_from_row(row)
 
     def put(self, entry):
@@ -93,8 +100,33 @@ class Database(object):
         values = (
             entry.dsid,
             entry.name,
-            sqlite3.Binary(entry.facial_encoding),
+            sqlite3.Binary(nparray_to_bin(entry.facial_encoding)),
             sqlite3.Binary(entry.picture),
         )
         cursor.execute(statement, values)
         self.connection.commit()
+
+
+def nparray_to_bin(nparray):
+    '''
+    Converts a numpy array into some binary data that can be stored
+
+    This only exists because numpy only provides binary conversion using files
+    '''
+    path = tempfile.NamedTemporaryFile(delete=False).name
+    numpy.save(path, nparray)
+    with open(path + '.npy', 'rb') as handle:
+        return handle.read()
+
+
+def bin_to_nparray(binary):
+    '''
+    Given some binary data that was once a numpy array, read it back
+
+    This only exists because numpy only provides binary conversion using files
+    '''
+    path = tempfile.NamedTemporaryFile(delete=False).name
+    with open(path, 'wb') as handle:
+        handle.write(binary)
+
+    return numpy.load(path)
