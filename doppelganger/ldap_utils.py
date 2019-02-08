@@ -6,7 +6,7 @@ import base64
 
 import ldap
 
-from . import logger
+from testlogger import logger
 
 
 def init_ldap():

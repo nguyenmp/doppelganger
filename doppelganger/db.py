@@ -17,6 +17,7 @@ Entry = collections.namedtuple('Entry', [
     'picture',  # The binary blob of jpeg bits
 ])
 
+
 INIT_SCRIPT = '''
 CREATE TABLE IF NOT EXISTS entry (
     dsid INTEGER PRIMARY KEY,
@@ -25,6 +26,9 @@ CREATE TABLE IF NOT EXISTS entry (
     picture BLOB NOT NULL
 );
 '''
+
+
+DB_PATH = './doppelganger.db'
 
 
 def create_entry_from_record(record, facial_encoding):

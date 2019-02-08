@@ -22,13 +22,13 @@ EXAMPLE_RESULT = [(
 )]
 
 
-@patch('doppelganger.init')
+@patch('doppelganger.cli.init')
 def test_arguments_init(init_func):
     '''
     Checks that the argument parser resolves
     the init command to the proper init function
     '''
-    parser = doppelganger.argument_parser()
+    parser = doppelganger.cli.argument_parser()
     assert parser.parse_args(['init']).func == init_func
 
 
@@ -38,9 +38,9 @@ def test_get_db(database_class):
     Checks that the argument parser resolves
     the init command to the proper init function
     '''
-    database = doppelganger.get_database()
+    database = doppelganger.cli.get_database()
     assert database is not None
-    database_class.assert_called_with(doppelganger.DB_PATH)
+    database_class.assert_called_with(doppelganger.db.DB_PATH)
 
 
 def test_numpy_array_serialization():
@@ -60,7 +60,7 @@ def test_save_bytes_to_file():
     Saves bytes to a file and checks they were properly saved
     '''
     content = '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00'
-    file_name = doppelganger.save_bytes_to_file(content)
+    file_name = doppelganger.ml.save_bytes_to_file(content)
     with open(file_name) as handle:
         assert handle.read() == content
 
@@ -90,9 +90,9 @@ def test_process_result():
     assert result['applePhotoOfficial-jpeg'] == '/9j/4AAQSkZJRgABAQEASABIAAA='
 
 
-@patch('doppelganger.dlib.face_recognition_model_v1')
-@patch('doppelganger.dlib.shape_predictor')
-@patch('doppelganger.dlib.get_frontal_face_detector')
+@patch('doppelganger.ml.dlib.face_recognition_model_v1')
+@patch('doppelganger.ml.dlib.shape_predictor')
+@patch('doppelganger.ml.dlib.get_frontal_face_detector')
 def test_get_pipeline(face_detector, pose_analyzer, face_encoder):
     '''
     Checks that we properly construct the pipeline
@@ -101,7 +101,7 @@ def test_get_pipeline(face_detector, pose_analyzer, face_encoder):
     pose_analyzer.return_value = MagicMock()
     face_encoder.return_value = MagicMock()
 
-    pipeline = doppelganger.get_pipeline()
+    pipeline = doppelganger.ml.get_pipeline()
     assert pipeline.face_detector == face_detector.return_value
     assert pipeline.pose_analyzer == pose_analyzer.return_value
     assert pipeline.face_encoder == face_encoder.return_value

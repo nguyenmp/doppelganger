@@ -2,10 +2,9 @@
 This is the main module.  It is executed when run with `python -m doppleganger`
 '''
 
-from . import (
-    logger,
-    argument_parser,
-)
+from testlogger import logger
+
+from .cli import argument_parser
 
 
 def main():
