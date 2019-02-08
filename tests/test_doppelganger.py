@@ -70,7 +70,7 @@ def test_get_filter_string():
     Asserts that the function call returns the exact string we expect
     '''
     expected = '(&(employeeType=Apple Employee)(applePhotoOfficial-jpeg=*))'
-    assert doppelganger.get_filter_string() == expected
+    assert doppelganger.ldap_utils.get_filter_string() == expected
 
 
 def test_process_result():
@@ -78,7 +78,7 @@ def test_process_result():
     Makes sure that given some standard looking
     result from LDAP, we mutate it as expected
     '''
-    result = doppelganger.process_result(EXAMPLE_RESULT)
+    result = doppelganger.ldap_utils.process_result(EXAMPLE_RESULT)
 
     # Normally, this key is an array of integer strings, we should pull it out
     assert result['appledsId'] == '23151044'
