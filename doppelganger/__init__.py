@@ -226,8 +226,6 @@ def analyze(args):
         if entry.dsid == employee.dsid:
             continue
 
-        logger.info('Checking %s', entry.name)
-
         distance = numpy.linalg.norm(
             entry.facial_encoding - employee.facial_encoding
         )
@@ -238,8 +236,7 @@ def analyze(args):
         heapq.heappush(result, (-distance, entry))
 
         while len(result) > args.count:
-            (distance, evictant) = heapq.heappop(result)
-            logger.info('%s is too different', evictant.name)
+            heapq.heappop(result)
 
     for (distance, candidate) in result:
         logger.info('DSID: %s matches %s%%', candidate.dsid, int(100 - (-distance * 100)))
