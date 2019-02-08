@@ -10,7 +10,9 @@ import base64
 import collections
 import heapq
 import os
+import random
 import tempfile
+import time
 
 import dlib
 import ldap
@@ -213,6 +215,42 @@ def init(_):
             database.put(entry)
 
 
+def compare(candidate_facial_encoding, employees, count):
+    '''
+    Given some target facial encoding, find the `count` most
+    similar employees as a tuple of (distance, Entry)
+    '''
+    logger.info('Comparing')
+    twins = []
+    for employee in employees:
+        distance = numpy.linalg.norm(
+            employee.facial_encoding - candidate_facial_encoding
+        )
+
+        # Unconditionally add, then remove the later
+        # We use negative distance becauset his is a min heap
+        # and we want to pop the furthest items efficiently
+        heapq.heappush(twins, (-distance, employee))
+
+        while len(twins) > count:
+            heapq.heappop(twins)
+
+    return twins
+
+
+def print_twins(twins):
+    '''
+    Given a list of twins, print them out in a good order
+    '''
+    twins = sorted(twins, key=lambda x: x[0])
+    for (distance, twin) in twins:
+        logger.info(
+            'DSID: %s matches %s%%',
+            twin.dsid,
+            int(100 - (-distance * 100)),
+        )
+
+
 def analyze(args):
     '''
     Given the dsid of a target, find the top matches to that target
@@ -221,25 +259,16 @@ def analyze(args):
     employee = database.get_by_dsid(args.dsid)
     logger.info('Finding matches for %s', employee.name)
 
-    result = []
+    logger.info('Loading all employees')
+    all_employees = []
     for entry in database.entries():
-        if entry.dsid == employee.dsid:
-            continue
+        all_employees.append(entry)
 
-        distance = numpy.linalg.norm(
-            entry.facial_encoding - employee.facial_encoding
-        )
+    import pdb
+    pdb.set_trace()
 
-        # Unconditionally add, then remove the later
-        # We use negative distance becauset his is a min heap
-        # and we want to pop the furthest items efficiently
-        heapq.heappush(result, (-distance, entry))
-
-        while len(result) > args.count:
-            heapq.heappop(result)
-
-    for (distance, candidate) in result:
-        logger.info('DSID: %s matches %s%%', candidate.dsid, int(100 - (-distance * 100)))
+    twins = compare(employee.facial_encoding, all_employees, 20)
+    print_twins(twins)
 
 
 def argument_parser():
