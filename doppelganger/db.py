@@ -6,7 +6,6 @@ import base64
 import collections
 import io
 import sqlite3
-import tempfile
 
 import numpy
 
