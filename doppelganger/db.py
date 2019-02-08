@@ -4,6 +4,7 @@ All the code pertaining to the file database backing
 
 import base64
 import collections
+import io
 import sqlite3
 import tempfile
 
@@ -113,10 +114,10 @@ def nparray_to_bin(nparray):
 
     This only exists because numpy only provides binary conversion using files
     '''
-    path = tempfile.NamedTemporaryFile(delete=False).name
-    numpy.save(path, nparray)
-    with open(path + '.npy', 'rb') as handle:
-        return handle.read()
+    # Creates a file like object in memory to write the bytes to temporarily
+    file_ish = io.BytesIO()
+    numpy.save(file_ish, nparray)
+    return file_ish.getvalue()
 
 
 def bin_to_nparray(binary):
@@ -125,8 +126,6 @@ def bin_to_nparray(binary):
 
     This only exists because numpy only provides binary conversion using files
     '''
-    path = tempfile.NamedTemporaryFile(delete=False).name
-    with open(path, 'wb') as handle:
-        handle.write(binary)
-
-    return numpy.load(path)
+    # Converts the bits into a file like object
+    file_ish = io.BytesIO(binary)
+    return numpy.load(file_ish)
