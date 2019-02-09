@@ -8,6 +8,7 @@ import io
 import sqlite3
 
 import numpy
+from testlogger import logger
 
 
 Entry = collections.namedtuple('Entry', [
@@ -51,7 +52,7 @@ def create_entry_from_row(row):
         dsid=row['dsid'],
         name=row['name'],
         facial_encoding=bin_to_nparray(row['facial_encoding']),
-        picture=row['picture'],
+        picture=str(row['picture']),
     )
 
 
@@ -79,6 +80,16 @@ class Database(object):
         cursor.execute('SELECT * FROM entry')
         for row in cursor:
             yield create_entry_from_row(row)
+
+    def get_all(self):
+        '''
+        Loads all the data into an array in memory
+        '''
+        logger.info('Loading all employees')
+        all_entries = []
+        for entry in self.entries():
+            all_entries.append(entry)
+        return all_entries
 
     def get_by_dsid(self, dsid):
         '''

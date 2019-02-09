@@ -4,8 +4,6 @@ Code mostly used by the CLI version of this app
 
 import argparse
 import base64
-import heapq
-import numpy
 
 from testlogger import logger
 
@@ -13,6 +11,7 @@ from . import (
     db,
     ldap_utils,
     ml,
+    logic,
 )
 
 
@@ -34,53 +33,23 @@ def init(_):
     pipeline = ml.get_pipeline()  # This loads a lot of files and is slow
 
     for employee in ldap_utils.get_employees(ldap_instance):
-        logger.info('Looking at %s', employee['cn'])
+        logger.info('Looking at %s, %s', employee['cn'], employee['appledsId'])
         image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
         file_name = ml.save_bytes_to_file(image_bytes)
-        encoding = ml.calculate_encoding_for_face(file_name, pipeline)
-        if encoding is not None:
-            employee['encoding'] = encoding
+        results = ml.calculate_encoding_for_face(file_name, pipeline)
+        if not results:
+            logger.warning('No faces found')
+        else:
+            if len(results) > 1:
+                logger.warning(
+                    'Found %s faces, using first', len(results))
+
+            result = results[0]
             entry = db.create_entry_from_record(
                 employee,
-                encoding,
+                result.encoding,
             )
             database.put(entry)
-
-
-def compare(candidate_facial_encoding, employees, count):
-    '''
-    Given some target facial encoding, find the `count` most
-    similar employees as a tuple of (distance, Entry)
-    '''
-    logger.info('Comparing')
-    twins = []
-    for employee in employees:
-        distance = numpy.linalg.norm(
-            employee.facial_encoding - candidate_facial_encoding
-        )
-
-        # Unconditionally add, then remove the later
-        # We use negative distance becauset his is a min heap
-        # and we want to pop the furthest items efficiently
-        heapq.heappush(twins, (-distance, employee))
-
-        while len(twins) > count:
-            heapq.heappop(twins)
-
-    return twins
-
-
-def print_twins(twins):
-    '''
-    Given a list of twins, print them out in a good order
-    '''
-    twins = sorted(twins, key=lambda x: x[0])
-    for (distance, twin) in twins:
-        logger.info(
-            'DSID: %s matches %s%%',
-            twin.dsid,
-            int(100 - (-distance * 100)),
-        )
 
 
 def analyze(args):
@@ -92,15 +61,10 @@ def analyze(args):
     logger.info('Finding matches for %s', employee.name)
 
     logger.info('Loading all employees')
-    all_employees = []
-    for entry in database.entries():
-        all_employees.append(entry)
+    all_employees = database.get_all()
 
-    import pdb
-    pdb.set_trace()
-
-    twins = compare(employee.facial_encoding, all_employees, 20)
-    print_twins(twins)
+    twins = logic.compare(employee.facial_encoding, all_employees, 20)
+    logic.print_twins(twins)
 
 
 def argument_parser():

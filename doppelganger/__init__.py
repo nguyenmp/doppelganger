@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 '''
-A CLI for finding duplicates of an in individual at Apple
+Scrapes Apple Directory and determines doppelgängers
 '''
 
 from . import (
@@ -10,4 +10,6 @@ from . import (
     db,
     ldap_utils,
     ml,
+    flask_app,
+    logic,
 )

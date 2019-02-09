@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <head/>
+    <body>
+        <video autoplay></video>
+        <canvas></canvas>
+        <form><button onclick='capture(); return false;'>Hello</button></form>
+        <script>
+            function capture() {
+                console.log('Capturing!');
+
+                // Set the "screenshot" canvas to the size of the video
+                var video = document.querySelector('video');
+                var canvas = document.querySelector('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Use a 2-dimensional context (flat image, not 3D)
+                var context = canvas.getContext('2d');
+
+                // Transfer the still from the video to the canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // The data in the cavas as a string
+                var data_url = canvas.toDataURL()
+
+                send({'image_uri': data_url});
+            }
+
+            // https://developer.mozilla.org/en-US/docs/Learn/HTML/Forms/Sending_forms_through_JavaScript#Sending_form_data
+            function send(data) {
+                var xhttp = new XMLHttpRequest();
+                xhttp.addEventListener('load', got_response);
+                xhttp.addEventListener('error', error);
+
+                var urlEncodedDataPairs = [];
+                for (var key in data) {
+                    var value = data[key];
+                    var encoded_key = encodeURIComponent(key);
+                    var encoded_value = encodeURIComponent(value)
+                    urlEncodedDataPairs.push(encoded_key + '=' + encoded_value);
+                }
+                urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
+
+                xhttp.open('POST', 'process', true);
+                xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhttp.send(urlEncodedData);
+            }
+
+            function got_response(response) {
+                console.log(response);
+            }
+
+            function setup_stream(stream) {
+                console.log('Setting up stream')
+                var video = document.querySelector('video');
+                video.srcObject = stream;
+            }
+
+            function error(err) {
+                console.log(err);
+            }
+
+            navigator.mediaDevices
+                .getUserMedia({video: true})
+                .then(setup_stream)
+                .catch(error)
+        </script>
+    </body>
+</html>
