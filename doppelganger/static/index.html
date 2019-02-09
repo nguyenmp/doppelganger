@@ -1,10 +1,32 @@
 <!DOCTYPE html>
 <html>
-    <head/>
+    <head>
+        <style type="text/css">
+            #matches {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            #matches a {
+                flex-grow: 1;
+                text-align: center;
+                display: block;
+            }
+            #matches span {
+                flex-grow: 1;
+                text-align: center;
+                display: block;
+            }
+            #graphics {
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+    </head>
     <body>
-        <video autoplay></video>
-        <canvas></canvas>
-        <form><button onclick='capture(); return false;'>Hello</button></form>
+        <div id='graphics'>
+            <video autoplay onclick='capture();'></video>
+            <canvas></canvas>
+        </div>
         <div id='matches'></div>
         <script>
             var global_thing;
@@ -14,8 +36,6 @@
                 // Set the "screenshot" canvas to the size of the video
                 var video = document.querySelector('video');
                 var canvas = document.querySelector('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
 
                 // Use a 2-dimensional context (flat image, not 3D)
                 var context = canvas.getContext('2d');
@@ -129,6 +149,17 @@
             function setup_stream(stream) {
                 console.log('Setting up stream')
                 var video = document.querySelector('video');
+                video.onloadedmetadata = function() {
+                    var canvas = document.querySelector('canvas');
+                    var context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    console.log(video.videoWidth);
+                    console.log(video.videoHeight);
+                    context.textAlign = "center";
+                    context.font='lighter 30px Arial';
+                    context.fillText("Click on the video to begin!", canvas.width / 2, canvas.height / 2);
+                }
                 video.srcObject = stream;
             }
 
