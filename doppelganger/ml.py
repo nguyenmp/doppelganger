@@ -84,12 +84,11 @@ def calculate_encoding_for_face(file_name, pipeline):
         # other htan we don't want to pass around a dlib object through a
         # web request.  Other htan that, we can pick any good primitive
         # encoding desired.
-        location = map(point_to_dict, [
-            location.tl_corner(),
-            location.tr_corner(),
-            location.bl_corner(),
-            location.br_corner(),
-        ])
+        width = location.width()
+        height = location.height()
+        location = point_to_dict(location.tl_corner())
+        location['width'] = width
+        location['height'] = height
 
         result.append(PipelineResult(
             location=location,

@@ -49,6 +49,38 @@
 
             function got_response(response) {
                 console.log(response);
+                var results = JSON.parse(responxxse.target.responseText);
+                console.log(results);
+                for (var i = 0; i < results.length; i++) {
+                    var result = results[i];
+                    render_overlay(result);
+                }
+            }
+
+            function render_overlay(result) {
+                var landmarks = result[0];
+                var twins = result[1];
+                var position = result[2];
+
+                var canvas = document.querySelector('canvas');
+                var context = canvas.getContext('2d');
+
+                // Draw face outline
+                context.strokeStyle = 'red';
+                context.lineWidth = 4;
+                context.strokeRect(
+                    position['x'],
+                    position['y'],
+                    position['width'],
+                    position['height'],
+                );
+
+                // Draw landmarks over face
+                for (var i = 0; i < landmarks.length; i++) {
+                    var landmark = landmarks[i];
+                    context.fillStyle = 'blue'
+                    context.fillRect(landmark['x'] - 1, landmark['y'] - 1, 3, 3)
+                }
             }
 
             function setup_stream(stream) {

@@ -22,7 +22,6 @@ def print_twins(twins):
     '''
     Given a list of twins, print them out in a good order
     '''
-    twins = sorted(twins, key=lambda x: x[0])
     for twin in twins:
         logger.info(
             'DSID: %s Name: %s matches %s%%',
@@ -66,6 +65,8 @@ def compare(candidate_facial_encoding, employees, count):
         Twin(-twin.distance, twin.name, twin.dsid, twin.picture)
         for twin in twins
     ]
+
+    twins = sorted(twins, key=lambda twin: twin.distance)
 
     # Return the twins with intuitive distances
     return twins
