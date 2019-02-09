@@ -5,7 +5,9 @@
         <video autoplay></video>
         <canvas></canvas>
         <form><button onclick='capture(); return false;'>Hello</button></form>
+        <div id='matches'></div>
         <script>
+            var global_thing;
             function capture() {
                 console.log('Capturing!');
 
@@ -49,7 +51,7 @@
 
             function got_response(response) {
                 console.log(response);
-                var results = JSON.parse(responxxse.target.responseText);
+                var results = JSON.parse(response.target.responseText);
                 console.log(results);
                 for (var i = 0; i < results.length; i++) {
                     var result = results[i];
@@ -81,6 +83,47 @@
                     context.fillStyle = 'blue'
                     context.fillRect(landmark['x'] - 1, landmark['y'] - 1, 3, 3)
                 }
+
+                show_matches(twins);
+            }
+
+            function show_matches(twins) {
+                var matches_div = document.querySelector('#matches');
+
+                // Remove any existing matches
+                matches_div.innerHTML = '';
+
+                for (var i = 0; i < twins.length; i++) {
+                    var twin = twins[i];
+                    twin_content = render_twin(twin);
+                    matches_div.appendChild(twin_content);
+                }
+            }
+
+            function render_twin(twin) {
+                global_thing = twin;
+
+                var distance = twin[0];
+                var name = twin[1];
+                var dsid = twin[2];
+                var base64_image = twin[3];
+
+                var div = document.createElement('div');
+                div.setAttribute('class', 'twin');
+                var img = document.createElement('img');
+                img.setAttribute('src', 'data:image/png;base64,' + base64_image);
+                div.appendChild(img)
+
+                var link = document.createElement('a');
+                link.innerText = name
+                link.setAttribute('href', 'adir://employees/' + dsid);
+                div.appendChild(link)
+
+                var similarity = document.createElement('span');
+                similarity.innerText = ' matches ' + ((1 - distance) * 100).toFixed(2) + '%';
+                div.appendChild(similarity);
+
+                return div
             }
 
             function setup_stream(stream) {
