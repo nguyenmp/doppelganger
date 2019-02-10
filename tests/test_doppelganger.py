@@ -55,16 +55,6 @@ def test_numpy_array_serialization():
     assert numpy.array_equal(array, and_back_again)
 
 
-def test_save_bytes_to_file():
-    '''
-    Saves bytes to a file and checks they were properly saved
-    '''
-    content = '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00'
-    file_name = doppelganger.ml.save_bytes_to_file(content)
-    with open(file_name) as handle:
-        assert handle.read() == content
-
-
 def test_get_filter_string():
     '''
     Asserts that the function call returns the exact string we expect

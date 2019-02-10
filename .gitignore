@@ -1,3 +1,6 @@
 *.pyc
 *.db
 .DS_STORE
+
+# Output of pytest-coverage
+.coverage

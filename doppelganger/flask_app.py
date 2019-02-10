@@ -51,7 +51,7 @@ def process():
     image_bytes = base64.b64decode(encoded_data)
 
     file_name = ml.save_bytes_to_file(image_bytes)
-    pipeline_results = ml.calculate_encoding_for_face(file_name, get_pipeline())
+    pipeline_results = ml.calculate_encoding_for_image(file_name, get_pipeline())
 
     responses = []
     for pipeline_result in pipeline_results:

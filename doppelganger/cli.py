@@ -36,7 +36,7 @@ def init(_):
         logger.info('Looking at %s, %s', employee['cn'], employee['appledsId'])
         image_bytes = base64.b64decode(employee['applePhotoOfficial-jpeg'])
         file_name = ml.save_bytes_to_file(image_bytes)
-        results = ml.calculate_encoding_for_face(file_name, pipeline)
+        results = ml.calculate_encoding_for_image(file_name, pipeline)
         if not results:
             logger.warning('No faces found')
         else:
