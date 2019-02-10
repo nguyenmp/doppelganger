@@ -43,18 +43,6 @@ def test_get_db(database_class):
     database_class.assert_called_with(doppelganger.db.DB_PATH)
 
 
-def test_numpy_array_serialization():
-    '''
-    Tests serialization and deserialization of numpy arrays
-    '''
-    import numpy
-    array = numpy.array([0, 1, 2])
-    binary = doppelganger.db.nparray_to_bin(array)
-    assert binary
-    and_back_again = doppelganger.db.bin_to_nparray(binary)
-    assert numpy.array_equal(array, and_back_again)
-
-
 def test_get_filter_string():
     '''
     Asserts that the function call returns the exact string we expect
